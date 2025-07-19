@@ -17,7 +17,6 @@ function App(): JSX.Element {
     }
   }, []);
 
-<<<<<<< HEAD:pwa-hello-world/src/App.jsx
   const handleRegister = async () => {
     if (!name.trim()) {
       alert("名前を入力してください");
@@ -37,23 +36,6 @@ function App(): JSX.Element {
 
       // 2. プッシュ通知の購読
       const subscription = await registration.pushManager.subscribe({
-=======
-  const handleSubscribe = async (): Promise<void> => {
-    if (!("serviceWorker" in navigator)) {
-      console.error("Service Worker not supported");
-      return;
-    }
-
-    if (!VAPID_PUBLIC_KEY) {
-      console.error("VAPID_PUBLIC_KEY is not defined.");
-      alert("VAPID_PUBLIC_KEY is not defined. Please set it in your environment variables.");
-      return;
-    }
-
-    try {
-      const registration: ServiceWorkerRegistration = await navigator.serviceWorker.ready;
-      const subscription: PushSubscription = await registration.pushManager.subscribe({
->>>>>>> 1720767c8a2d356ae9f328e1e1a4d9ce0540f764:pwa-hello-world/src/App.tsx
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
       });
