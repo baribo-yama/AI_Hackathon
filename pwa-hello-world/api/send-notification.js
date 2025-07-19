@@ -2,6 +2,15 @@ import webpush from 'web-push';
 
 let subscription = null; // In a real app, you would fetch this from a database.
 
+subscription = {
+  "endpoint":"https://fcm.googleapis.com/fcm/send/cxXQfiCaL0E:APA91bGt8BmT_WNTn08Fv1JbEBplhmF6RDFt-CVN9p_310zuEBK4dFR_DI7AHj9ICKHNp5LWMzVYxuDVvNJ3y3DLlh7RIKGE1Ed8nx2WVk7GNjUhHdXwLbhg93XcflatTyri2HPZi3i6",
+  "expirationTime":null,
+  "keys":{
+    "p256dh":"BMAx-CFpBww2JiZDU_ckawYjjgNwbwjh_SpqQJbQLSrTsY-bChSTxe6Y-2V7TaOtgMWXx-WcOH38EIgHgRyUGnA",
+    "auth":"oSEeOi1AFa3nclFq8R9G5w"
+  }
+};
+
 export default function handler(req, res) {
   if (req.method === 'POST') {
     const vapidKeys = {
@@ -10,7 +19,7 @@ export default function handler(req, res) {
     };
 
     webpush.setVapidDetails(
-      'mailto:your-email@example.com', // Replace with your email
+      'mailto:mnaoyuki0228@gmail.com', // Replace with your email
       vapidKeys.publicKey,
       vapidKeys.privateKey
     );
