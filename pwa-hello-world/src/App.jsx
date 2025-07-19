@@ -65,7 +65,7 @@ function App() {
 
   return (
     <div>
-      <h1>Hello PWA with Auto-Update!</h1>
+      <h1>Hello PWA - Updated Again!</h1>
       <button onClick={handleSubscribe}>Subscribe to Notifications</button>
       <button onClick={handleSendNotification}>Send Notification</button>
     </div>
