@@ -1,19 +1,23 @@
 import { useEffect, useState } from "react";
 
-function App() {
+function App(): JSX.Element {
   const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
   const [name, setName] = useState("");
   const [registered, setRegistered] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const [registered, setRegistered] = useState<boolean>(false);
+  const [name, setName] = useState<string>("");
+
   useEffect(() => {
     if ("serviceWorker" in navigator && "PushManager" in window) {
-      navigator.serviceWorker.ready.then((registration) => {
+      navigator.serviceWorker.ready.then((registration: ServiceWorkerRegistration) => {
         // You can do something with the registration here
       });
     }
   }, []);
 
+<<<<<<< HEAD:pwa-hello-world/src/App.jsx
   const handleRegister = async () => {
     if (!name.trim()) {
       alert("名前を入力してください");
@@ -33,6 +37,23 @@ function App() {
 
       // 2. プッシュ通知の購読
       const subscription = await registration.pushManager.subscribe({
+=======
+  const handleSubscribe = async (): Promise<void> => {
+    if (!("serviceWorker" in navigator)) {
+      console.error("Service Worker not supported");
+      return;
+    }
+
+    if (!VAPID_PUBLIC_KEY) {
+      console.error("VAPID_PUBLIC_KEY is not defined.");
+      alert("VAPID_PUBLIC_KEY is not defined. Please set it in your environment variables.");
+      return;
+    }
+
+    try {
+      const registration: ServiceWorkerRegistration = await navigator.serviceWorker.ready;
+      const subscription: PushSubscription = await registration.pushManager.subscribe({
+>>>>>>> 1720767c8a2d356ae9f328e1e1a4d9ce0540f764:pwa-hello-world/src/App.tsx
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
       });
@@ -49,6 +70,7 @@ function App() {
         }),
       });
 
+<<<<<<< HEAD:pwa-hello-world/src/App.jsx
       if (!response.ok) {
         throw new Error("登録に失敗しました");
       }
@@ -81,23 +103,37 @@ function App() {
       alert("登録に失敗しました: " + error.message);
     } finally {
       setIsLoading(false);
+=======
+      alert("Subscribed to notifications!");
+    } catch (error: any) {
+      console.error("Error subscribing to notifications:", error);
+      alert("Error subscribing to notifications.");
+>>>>>>> 1720767c8a2d356ae9f328e1e1a4d9ce0540f764:pwa-hello-world/src/App.tsx
     }
   };
 
-  const handleSendNotification = async () => {
+  const handleSendNotification = async (): Promise<void> => {
     try {
       await fetch("/api/send-notification", {
         method: "POST",
       });
       alert("Notification sent!");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error sending notification:", error);
       alert("Error sending notification.");
     }
   };
 
+  const handleRegister = (): void => {
+    // ここに登録ロジックを追加します。
+    // 例えば、Supabaseにユーザー情報を保存する処理など。
+    // 現時点では、登録状態を切り替えるだけにします。
+    setRegistered(true);
+    alert(`User ${name} registered!`);
+  };
+
   // Helper function to convert VAPID key
-  function urlBase64ToUint8Array(base64String) {
+  function urlBase64ToUint8Array(base64String: string): Uint8Array {
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding)
       .replace(/\-/g, "+")
@@ -134,6 +170,7 @@ function App() {
           </div>
         </div>
       ) : (
+<<<<<<< HEAD:pwa-hello-world/src/App.jsx
         <div style={{ textAlign: "center" }}>
           <h2 style={{ color: "#4CAF50", marginBottom: "20px" }}>
             ユーザー登録
@@ -191,6 +228,16 @@ function App() {
           }}>
             テスト通知送信
           </button>
+=======
+        <div>
+          <input
+            type="text"
+            placeholder="名前を入力"
+            value={name}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+          />
+          <button onClick={handleRegister}>登録</button>
+>>>>>>> 1720767c8a2d356ae9f328e1e1a4d9ce0540f764:pwa-hello-world/src/App.tsx
         </div>
       )}
     </div>
