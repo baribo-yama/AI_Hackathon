@@ -32,7 +32,7 @@ export default async function handler(req, res) {
         // 既存ユーザーの場合は名前を更新
         const { data, error } = await supabase
           .from('users')
-          .update({ name: name || 'Anonymous' })
+          .update({ name: name })
           .eq('endpoint', subscription.endpoint)
           .select();
 
@@ -47,24 +47,29 @@ export default async function handler(req, res) {
           .from('users')
           .insert([
             {
-              name: name || 'Anonymous',
+              name: name,
               endpoint: subscription.endpoint,
               p256dh: subscription.keys.p256dh,
               auth: subscription.keys.auth
               // created_atは自動で設定される
-            },
+            }
           ])
           .select();
 
         if (error) {
-          console.error('Error saving subscription to Supabase:', error);
-          return res.status(500).json({ message: 'Error saving subscription.' });
+          console.error('Error saving user to Supabase:', error);
+          return res.status(500).json({ message: 'Error saving user.' });
         }
         result = data;
       }
 
-      console.log('Subscription saved to Supabase:', result);
-      res.status(200).json({ message: 'Subscription saved.', user: result });
+      console.log('User saved to Supabase:', result);
+
+      // 1分おきの通知送信を開始するためのレスポンス
+      res.status(200).json({
+        message: 'Notifications started for user: ' + name,
+        user: result
+      });
     } catch (error) {
       console.error('Unexpected error:', error);
       res.status(500).json({ message: 'Internal server error.' });
