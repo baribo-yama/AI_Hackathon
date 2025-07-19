@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>筋チャレ</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Interフォントの読み込み */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f2f5;
+            margin: 0;
+            color: #333;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 95%;
+            max-width: 550px;
+            box-sizing: border-box; /* パディングを幅に含める */
+        }
+
+        h1, h2 {
+            color: #4CAF50; /* Green */
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .user-info, .ranking-area {
+            margin-bottom: 25px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            background-color: #fcfcfc;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        input[type="text"] {
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            margin-right: 10px;
+            width: calc(100% - 120px);
+            max-width: 250px;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+
+        button {
+            padding: 12px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .challenge-area {
+            background-color: #ffe0b2; /* Light Orange */
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border: 3px solid #ff9800; /* Orange border */
+            animation: fadeInScale 0.6s ease-out forwards; /* Appearance animation */
+            display: none; /* Initially hidden */
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .challenge-area.active {
+            display: block; /* Show when active */
+        }
+
+        .challenge-area h2 {
+            color: #d84315; /* Darker Orange */
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+
+        .challenge-area p {
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            font-weight: 600;
+            line-height: 1.5;
+        }
+
+        #completeChallengeBtn {
+            background-color: #2196F3; /* Blue */
+        }
+
+        #completeChallengeBtn:hover {
+            background-color: #1976D2;
+        }
+
+        #currentPoints {
+            font-weight: 700;
+            color: #4CAF50;
+            font-size: 1.4em;
+        }
+
+        #displayUserId {
+            font-weight: 600;
+            color: #607D8B; /* Greyish Blue */
+            word-break: break-all; /* 長いIDでも折り返す */
+        }
+
+        .ranking-area ul {
+            list-style: none;
+            padding: 0;
+            max-height: 250px; /* ランキングリストの高さ制限 */
+            overflow-y: auto; /* スクロール可能にする */
+            border: 1px solid #eee;
+            border-radius: 8px;
+            background-color: #fff;
+        }
+
+        .ranking-area li {
+            padding: 10px 15px;
+            border-bottom: 1px solid #f5f5f5;
+            font-size: 1.1em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ranking-area li:last-child {
+            border-bottom: none;
+        }
+
+        .ranking-area li span:first-child {
+            font-weight: 600;
+        }
+
+        /* Message Box Styles (for general messages) */
+        .message-box {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .message-box.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .message-box-content {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            max-width: 90%;
+            min-width: 300px;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+
+        .message-box.active .message-box-content {
+            transform: translateY(0);
+        }
+
+        .message-box-content p {
+            margin-bottom: 25px;
+            font-size: 1.2em;
+            font-weight: 500;
+            color: #444;
+        }
+
+        .message-box-content button {
+            background-color: #607D8B; /* Greyish Blue */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .message-box-content button:hover {
+            background-color: #546E7A;
+        }
+
+        /* Comment Box Specific Styles */
+        #commentMessageBox .message-box-content {
+            background-color: #e3f2fd; /* Light Blue background for comment modal */
+            border: 2px solid #90caf9;
+        }
+        #commentMessageBox p {
+            color: #1a237e; /* Darker blue text */
+        }
+        #commentInput {
+            border: 1px solid #a7d9f7;
+            background-color: #f7fcff;
+            color: #333;
+        }
+        #postCommentBtn {
+            background-color: #42a5f5; /* Blue */
+        }
+        #postCommentBtn:hover {
+            background-color: #2196F3;
+        }
+        #skipCommentBtn {
+            background-color: #9e9e9e; /* Grey */
+        }
+        #skipCommentBtn:hover {
+            background-color: #757575;
+        }
+
+
+        /* Animations */
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            input[type="text"] {
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+            button {
+                width: 100%;
+            }
+            .user-info button {
+                margin-top: 10px;
+            }
+            .message-box-content {
+                min-width: unset;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💪 筋チャレ 💪</h1>
+        <div class="user-info">
+            <input type="text" id="nicknameInput" placeholder="ニックネームを入力 (10文字まで)" maxlength="10" class="w-full md:w-auto p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all">
+            <button id="saveNicknameBtn" class="mt-2 md:mt-0 px-6 py-3 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-all shadow-md">登録</button>
+            <p class="mt-4 text-lg">あなたのユーザーID: <span id="displayUserId" class="font-bold text-gray-700">未登録</span></p>
+            <p class="mt-2 text-xl">現在の筋肉ポイント: <span id="currentPoints" class="font-bold text-green-600">0</span>pt</p>
+        </div>
+
+        <div id="challengeArea" class="challenge-area">
+            <h2>🚨 筋トレチャレンジ！ 🚨</h2>
+            <p id="challengeText" class="text-gray-800"></p>
+            <button id="completeChallengeBtn" class="mt-4 px-8 py-4 bg-blue-500 text-white font-bold rounded-lg hover:bg-blue-600 transition-all shadow-lg">やった！ (筋肉ポイントGET)</button>
+        </div>
+
+        <div class="ranking-area">
+            <h2>🏆 筋肉ランキング 🏆</h2>
+            <ul id="rankingList" class="divide-y divide-gray-200">
+                <!-- ランキングがここに表示されます -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- General Message Box HTML -->
+    <div id="messageBox" class="message-box">
+        <div class="message-box-content">
+            <p id="messageText"></p>
+            <button id="messageBoxCloseBtn">OK</button>
+        </div>
+    </div>
+
+    <!-- Comment Box HTML -->
+    <div id="commentMessageBox" class="message-box">
+        <div class="message-box-content">
+            <p class="text-xl font-semibold mb-4">今日の筋トレ、どうだった？</p>
+            <textarea id="commentInput" class="w-full p-3 border rounded-lg mb-4 resize-y focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all" rows="3" placeholder="一言コメントを入力 (任意)"></textarea>
+            <div class="flex justify-around gap-4">
+                <button id="postCommentBtn" class="flex-1 px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition-all shadow-md">投稿</button>
+                <button id="skipCommentBtn" class="flex-1 px-6 py-3 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition-all shadow-md">スキップ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKの読み込み -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, setDoc, updateDoc, onSnapshot, collection, query, orderBy, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        // グローバル変数からFirebaseの設定を取得
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let auth, db, userId; // Firebase Auth, Firestoreインスタンス, ユーザーID
+        let currentPoints = 0; // 現在のポイント
+        let challengeTimeout; // チャレンジタイマーのID
+
+        // DOM要素の取得
+        const nicknameInput = document.getElementById('nicknameInput');
+        const saveNicknameBtn = document.getElementById('saveNicknameBtn');
+        const currentPointsSpan = document.getElementById('currentPoints');
+        const displayUserIdSpan = document.getElementById('displayUserId');
+        const challengeArea = document.getElementById('challengeArea');
+        const challengeText = document.getElementById('challengeText');
+        const completeChallengeBtn = document.getElementById('completeChallengeBtn');
+        const rankingList = document.getElementById('rankingList');
+
+        // メッセージボックス要素 (汎用)
+        const messageBox = document.getElementById('messageBox');
+        const messageText = document.getElementById('messageText');
+        const messageBoxCloseBtn = document.getElementById('messageBoxCloseBtn');
+
+        // コメントボックス要素
+        const commentMessageBox = document.getElementById('commentMessageBox');
+        const commentInput = document.getElementById('commentInput');
+        const postCommentBtn = document.getElementById('postCommentBtn');
+        const skipCommentBtn = document.getElementById('skipCommentBtn');
+
+        // 筋トレメニューのリスト
+        const workoutMenus = [
+            { text: "スクワット5回！立ったついでにやってみよう！", points: 10 },
+            { text: "背伸び10秒！天井に手が届くかな？", points: 5 },
+            { text: "肩回し10回！肩こり解消にもなるよ！", points: 5 },
+            { text: "椅子に座って足踏み30秒！気分転換に！", points: 7 },
+            { text: "腕立て伏せ3回！できる範囲でOK！", points: 15 },
+            { text: "その場で足踏み1分！血行促進！", points: 8 },
+            { text: "かかと上げ10回！ふくらはぎを鍛えよう！", points: 6 },
+            { text: "壁を使った腕立て伏せ5回！", points: 12 }
+        ];
+
+        /**
+         * カスタムメッセージボックスを表示する関数
+         * @param {string} message - 表示するメッセージ
+         * @param {function} [onCloseCallback] - メッセージボックスが閉じられた後に実行するコールバック関数
+         */
+        const showMessageBox = (message, onCloseCallback = null) => {
+            messageText.textContent = message;
+            messageBox.classList.add('active');
+
+            // 既存のイベントリスナーを削除してから追加（一度だけ実行）
+            const closeHandler = () => {
+                messageBox.classList.remove('active');
+                messageBoxCloseBtn.removeEventListener('click', closeHandler); // イベントリスナーを削除
+                if (onCloseCallback) {
+                    onCloseCallback();
+                }
+            };
+            messageBoxCloseBtn.addEventListener('click', closeHandler);
+        };
+
+        /**
+         * コメント入力ボックスを表示する関数
+         */
+        const showCommentMessageBox = () => {
+            commentInput.value = ''; // 入力欄をクリア
+            commentMessageBox.classList.add('active');
+        };
+
+        /**
+         * コメント入力ボックスを非表示にする関数
+         */
+        const hideCommentMessageBox = () => {
+            commentMessageBox.classList.remove('active');
+        };
+
+        // コメント投稿ボタンイベントリスナー
+        postCommentBtn.addEventListener('click', async () => {
+            const comment = commentInput.value.trim();
+            await saveComment(comment);
+            hideCommentMessageBox();
+            showMessageBox("コメントを投稿しました！", startChallengeTimer);
+        });
+
+        // コメントスキップボタンイベントリスナー
+        skipCommentBtn.addEventListener('click', async () => {
+            await saveComment(""); // 空のコメントを保存（コメントなしを示す）
+            hideCommentMessageBox();
+            showMessageBox("コメントをスキップしました。", startChallengeTimer);
+        });
+
+        /**
+         * コメントをFirestoreに保存する関数
+         * @param {string} comment - 保存するコメント
+         */
+        const saveComment = async (comment) => {
+            if (!userId) {
+                console.error("User ID is not set. Cannot save comment.");
+                return;
+            }
+            const userDocRef = doc(db, `artifacts/${appId}/public/data/users`, userId);
+            try {
+                await updateDoc(userDocRef, {
+                    lastComment: comment,
+                    lastCommentTime: serverTimestamp() // コメント投稿時刻も記録
+                });
+                console.log("Comment saved successfully.");
+            } catch (error) {
+                console.error("Error saving comment:", error);
+                showMessageBox("エラー: コメントの保存に失敗しました。");
+            }
+        };
+
+        /**
+         * Firebaseを初期化し、認証状態を監視する関数
+         */
+        const initializeFirebaseAndAuth = async () => {
+            try {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                // 認証状態の変化を監視
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        // ユーザーが認証済みの場合
+                        userId = user.uid;
+                        displayUserIdSpan.textContent = userId; // UIにユーザーIDを表示
+                        console.log("Firebase Auth Ready. User ID:", userId);
+                        await loadUserData(); // ユーザーデータをロード
+                        updateRanking(); // ランキングを更新
+                    } else {
+                        // ユーザーが未認証の場合、カスタムトークンがあればサインイン、なければ匿名サインイン
+                        console.log("User is signed out or anonymous. Attempting sign-in...");
+                        try {
+                            if (initialAuthToken) {
+                                await signInWithCustomToken(auth, initialAuthToken);
+                                console.log("Signed in with custom token.");
+                            } else {
+                                await signInAnonymously(auth);
+                                console.log("Signed in anonymously.");
+                            }
+                        } catch (signInError) {
+                            console.error("Error during sign-in:", signInError);
+                            showMessageBox("エラー: 認証に失敗しました。アプリをリロードしてください。");
+                            // 匿名ユーザーIDのフォールバック (認証が完全に失敗した場合)
+                            userId = localStorage.getItem('userId') || crypto.randomUUID();
+                            displayUserIdSpan.textContent = userId + " (匿名)";
+                            await loadUserData();
+                            updateRanking();
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error("Error initializing Firebase:", error);
+                showMessageBox("エラー: アプリの初期化に失敗しました。ネットワーク接続を確認してください。");
+            }
+        };
+
+        /**
+         * ニックネームの保存とユーザーデータの読み込み
+         */
+        saveNicknameBtn.addEventListener('click', async () => {
+            const nickname = nicknameInput.value.trim();
+            if (nickname) {
+                // ニックネームをローカルストレージに保存
+                localStorage.setItem('nickname', nickname);
+                // ユーザーIDがまだ設定されていなければ、ここで設定（匿名ユーザーの場合）
+                if (!userId) {
+                    userId = localStorage.getItem('userId') || crypto.randomUUID();
+                    localStorage.setItem('userId', userId);
+                    displayUserIdSpan.textContent = userId + " (匿名)";
+                }
+                await loadUserData(); // ユーザーデータをロードして表示を更新
+                startChallengeTimer(); // チャレンジタイマー開始
+                showMessageBox(`ニックネーム「${nickname}」で登録しました！`);
+            } else {
+                showMessageBox('ニックネームを入力してください。');
+            }
+        });
+
+        /**
+         * ユーザーデータをFirestoreから読み込み、UIを更新する関数
+         */
+        const loadUserData = async () => {
+            if (!userId) {
+                console.warn("User ID is not set yet. Cannot load user data.");
+                return;
+            }
+
+            const nickname = localStorage.getItem('nickname');
+            if (nickname) {
+                nicknameInput.value = nickname;
+                saveNicknameBtn.disabled = true; // 登録済みならボタン無効化
+                nicknameInput.disabled = true; // ニックネーム入力欄も無効化
+            } else {
+                // ニックネームがローカルストレージになければ、入力可能にする
+                saveNicknameBtn.disabled = false;
+                nicknameInput.disabled = false;
+            }
+
+            // Firestoreからユーザーデータを取得
+            const userDocRef = doc(db, `artifacts/${appId}/public/data/users`, userId);
+            const userDoc = await getDoc(userDocRef);
+
+            if (userDoc.exists()) {
+                currentPoints = userDoc.data().points || 0;
+                currentPointsSpan.textContent = currentPoints;
+                // Firestoreのニックネームを優先（別デバイスからの更新考慮）
+                if (userDoc.data().nickname && userDoc.data().nickname !== nickname) {
+                    nicknameInput.value = userDoc.data().nickname;
+                    localStorage.setItem('nickname', userDoc.data().nickname);
+                }
+            } else {
+                // 初めてのユーザーであればFirestoreに登録
+                await setDoc(userDocRef, {
+                    nickname: nickname || '名無しさん', // ニックネームがなければデフォルト
+                    points: 0,
+                    lastUpdate: serverTimestamp(),
+                    lastComment: "", // 初期コメントは空
+                    lastCommentTime: serverTimestamp()
+                });
+                currentPoints = 0;
+                currentPointsSpan.textContent = currentPoints;
+            }
+            // 認証完了後にタイマーを開始
+            if (auth.currentUser) { // 認証済みであることを確認
+                startChallengeTimer();
+            }
+        };
+
+        /**
+         * 筋トレチャレンジタイマーを開始する関数
+         */
+        const startChallengeTimer = () => {
+            // 既存のタイマーがあればクリア
+            if (challengeTimeout) {
+                clearTimeout(challengeTimeout);
+            }
+            // ランダムな間隔（例: 10秒〜60秒）でチャレンジを発生させる
+            const minInterval = 10000; // 10秒
+            const maxInterval = 60000; // 60秒
+            const randomInterval = Math.random() * (maxInterval - minInterval) + minInterval;
+            console.log(`次のチャレンジは${(randomInterval / 1000).toFixed(1)}秒後に来ます。`);
+            challengeTimeout = setTimeout(showChallenge, randomInterval);
+        };
+
+        /**
+         * 筋トレチャレンジを表示する関数
+         */
+        const showChallenge = () => {
+            const randomMenu = workoutMenus[Math.floor(Math.random() * workoutMenus.length)];
+            challengeText.textContent = randomMenu.text;
+            completeChallengeBtn.dataset.points = randomMenu.points; // 獲得ポイントをボタンに設定
+            challengeArea.classList.add('active'); // チャレンジエリアを表示 (アニメーション発火)
+        };
+
+        /**
+         * 筋トレチャレンジ完了時の処理
+         */
+        completeChallengeBtn.addEventListener('click', async () => {
+            if (!userId) {
+                showMessageBox('先にニックネームを登録してください。');
+                return;
+            }
+
+            const pointsToGet = parseInt(completeChallengeBtn.dataset.points);
+            currentPoints += pointsToGet;
+            currentPointsSpan.textContent = currentPoints;
+
+            // Firestoreのポイントを更新
+            const userDocRef = doc(db, `artifacts/${appId}/public/data/users`, userId);
+            try {
+                await updateDoc(userDocRef, {
+                    points: currentPoints,
+                    lastUpdate: serverTimestamp()
+                });
+                challengeArea.classList.remove('active'); // チャレンジエリアを非表示
+                showMessageBox(`${pointsToGet}ptゲット！合計${currentPoints}pt！`, showCommentMessageBox); // ポイント獲得後にコメント入力を促す
+                updateRanking(); // ランキングを更新
+            } catch (error) {
+                console.error("Error updating points:", error);
+                showMessageBox("エラー: ポイントの更新に失敗しました。");
+                startChallengeTimer(); // エラーでもタイマーは再開
+            }
+        });
+
+        /**
+         * ランキングをリアルタイムで更新する関数
+         */
+        const updateRanking = () => {
+            if (!db) {
+                console.warn("Firestore is not initialized yet. Cannot update ranking.");
+                return;
+            }
+            const usersCollectionRef = collection(db, `artifacts/${appId}/public/data/users`);
+            const q = query(usersCollectionRef, orderBy('points', 'desc')); // ポイントの高い順にソート
+
+            onSnapshot(q, (snapshot) => {
+                rankingList.innerHTML = ''; // リストをクリア
+                let rank = 1;
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const listItem = document.createElement('li');
+                    listItem.classList.add('flex', 'justify-between', 'items-center', 'py-2', 'px-4', 'border-b', 'border-gray-100');
+                    if (doc.id === userId) {
+                        listItem.classList.add('bg-blue-50', 'font-bold', 'text-blue-700', 'rounded-md'); // 自分の順位を強調
+                    }
+                    listItem.innerHTML = `
+                        <div>
+                            <span>${rank}. ${data.nickname}</span>
+                            ${data.lastComment ? `<p class="text-sm text-gray-500 mt-1">"${data.lastComment}"</p>` : ''}
+                        </div>
+                        <span class="text-green-600">${data.points}pt</span>
+                    `;
+                    rankingList.appendChild(listItem);
+                    rank++;
+                });
+            }, (error) => {
+                console.error("Error getting ranking: ", error);
+                showMessageBox("エラー: ランキングの読み込みに失敗しました。");
+            });
+        };
+
+        // アプリケーションの初期化
+        window.onload = initializeFirebaseAndAuth;
+    </script>
+</body>
+</html>
