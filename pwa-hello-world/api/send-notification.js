@@ -1,18 +1,32 @@
 import webpush from 'web-push';
+import { createClient } from '@supabase/supabase-js';
 
-let subscription = null; // In a real app, you would fetch this from a database.
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseAnonKey = process.env.SUPABASE_KEY;
 
-subscription = {
-  "endpoint":"https://fcm.googleapis.com/fcm/send/cxXQfiCaL0E:APA91bGt8BmT_WNTn08Fv1JbEBplhmF6RDFt-CVN9p_310zuEBK4dFR_DI7AHj9ICKHNp5LWMzVYxuDVvNJ3y3DLlh7RIKGE1Ed8nx2WVk7GNjUhHdXwLbhg93XcflatTyri2HPZi3i6",
-  "expirationTime":null,
-  "keys":{
-    "p256dh":"BMAx-CFpBww2JiZDU_ckawYjjgNwbwjh_SpqQJbQLSrTsY-bChSTxe6Y-2V7TaOtgMWXx-WcOH38EIgHgRyUGnA",
-    "auth":"oSEeOi1AFa3nclFq8R9G5w"
-  }
-};
-
-export default function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method === 'POST') {
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('Supabase URL or Anon Key is not set.');
+      return res.status(500).json({ message: 'Supabase configuration missing.' });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+    // Supabaseから購読情報を取得
+    const { data: subscriptions, error: fetchError } = await supabase
+      .from('users') // テーブル名が 'users' であることを確認
+      .select('endpoint, p256dh, auth');
+
+    if (fetchError) {
+      console.error('Error fetching subscriptions from Supabase:', fetchError);
+      return res.status(500).json({ message: 'Error fetching subscriptions.' });
+    }
+
+    if (!subscriptions || subscriptions.length === 0) {
+      return res.status(404).json({ message: 'No subscriptions found in Supabase.' });
+    }
+
     const vapidKeys = {
       publicKey: process.env.VAPID_PUBLIC_KEY,
       privateKey: process.env.VAPID_PRIVATE_KEY,
@@ -32,17 +46,24 @@ export default function handler(req, res) {
       },
     };
 
-    // This is where you would get the subscription from your database
-    // For this example, we're using the one saved in memory
-    if (subscription) {
-      webpush.sendNotification(subscription, JSON.stringify(notificationPayload))
-        .then(response => res.status(200).json({ message: 'Notification sent.' }))
-        .catch(error => {
-          console.error('Error sending notification:', error);
-          res.status(500).json({ message: 'Error sending notification.' });
-        });
-    } else {
-      res.status(404).json({ message: 'Subscription not found.' });
+    // 各購読情報に対して通知を送信
+    const sendPromises = subscriptions.map(sub => {
+      const pushSubscription = {
+        endpoint: sub.endpoint,
+        keys: {
+          p256dh: sub.p256dh,
+          auth: sub.auth,
+        },
+      };
+      return webpush.sendNotification(pushSubscription, JSON.stringify(notificationPayload));
+    });
+
+    try {
+      await Promise.all(sendPromises);
+      res.status(200).json({ message: 'Notifications sent to all subscribed users.' });
+    } catch (error) {
+      console.error('Error sending some notifications:', error);
+      res.status(500).json({ message: 'Error sending notifications.' });
     }
   } else {
     res.status(405).json({ message: 'Method not allowed.' });
