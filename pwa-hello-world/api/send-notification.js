@@ -40,8 +40,8 @@ export default async function handler(req, res) {
 
     const notificationPayload = {
       notification: {
-        title: 'New Notification',
-        body: 'Hello World',
+        title: '筋トレの時間です',
+        body: '💪2分以内に筋トレを開始💪',
         icon: 'pwa-192x192.png',
       },
     };

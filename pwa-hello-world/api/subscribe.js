@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+const supabaseAnonKey = process.env.SUPABASE_KEY;
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
@@ -19,6 +19,7 @@ export default async function handler(req, res) {
         .from('users') // テーブル名が 'users' であることを確認
         .insert([
           {
+            name: 'John Doe',
             endpoint: subscription.endpoint,
             p256dh: subscription.keys.p256dh,
             auth: subscription.keys.auth,
